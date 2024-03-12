@@ -2,4 +2,33 @@
     font-size: 50px;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     text-align: center;
+    animation: fade-up 0.5s;
+    color: white;
   }
+.center{
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+}
+
+img {
+  max-width: 30%;
+  max-height: 30%;
+}
+
+body {
+  /* background-color: #171717; */
+  background-image: linear-gradient(black, #171717);
+}
+
+@keyframes fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0px) scale(1);
+  }
+}
