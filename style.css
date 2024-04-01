@@ -1,56 +1,65 @@
 #p1{
-    font-size: 50px;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    text-align: center;
-    animation: fade-up 0.7s;
-    color: white;
-  }
+  font-size: 50px;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  text-align: center;
+  animation: fade-up 0.7s;
+  color: white;
+}
 
 .box{
-  width: 500px;
-  height: 500px;
-  margin: 20px auto 0 auto;
-  border: 7px solid #0000005e;
-  float: center;
-  border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-  background: url(https://github.com/NaturesBiscuits/NaturesBiscuits.github.io/blob/main/me.jpg?raw=true) no-repeat;
-  background-size: 110%;
-  background-position: top -10px center;
-  background-blend-mode: multiply;
-  animation: morph 8s ease-in-out infinite;
+width: 500px;
+height: 500px;
+margin: 20px auto 0 auto;
+border: 7px solid #0000005e;
+float: center;
+border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+background: url(https://github.com/NaturesBiscuits/NaturesBiscuits.github.io/blob/main/me.jpg?raw=true) no-repeat;
+background-size: 110%;
+background-position: top -10px center;
+background-blend-mode: multiply;
+transition: border-color 1s ease-in-out infinite;
+animation: morph 8s ease-in-out infinite;
 }
+
 @keyframes morph {
-  0%{
+  0% {
     border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-    border-color: rgb(178, 12, 203);
+    border-color: rgba(134, 9, 138, 0.452);
   }
-  50%{
+  25% {
+    border-color: rgba(255, 0, 255, 0.911);
+  }
+  50% {
     border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
-    border-color: rgb(170, 99, 192);
+    border-color: rgba(195, 0, 255, 0.452);
   }
-  100%{
+  75% {
+    border-color: rgba(255, 0, 255, 0.733);
+  }
+  100% {
     border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-    border-color: rgb(188, 78, 223);
+    border-color: rgba(134, 9, 138, 0.452);
   }
 }
 
+
 img {
-  max-width: 30%;
-  max-height: 30%;
+max-width: 30%;
+max-height: 30%;
 }
 
 body {
-  /* background-color: #171717; */
-  background-image: linear-gradient(rgb(0, 0, 0), rgb(80, 80, 80));
+/* background-color: #171717; */
+background-image: linear-gradient(rgb(0, 0, 0), rgb(80, 80, 80));
 }
 
 @keyframes fade-up {
-  0% {
-    opacity: 0;
-    transform: translateY(30px) scale(5);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0px) scale(1);
-  }
+0% {
+  opacity: 0;
+  transform: translateY(30px) scale(5);
+}
+100% {
+  opacity: 1;
+  transform: translateY(0px) scale(1);
+}
 }
