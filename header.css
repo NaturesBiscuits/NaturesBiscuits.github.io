@@ -78,21 +78,9 @@ header.sticky ul li a
   color: #000;
 }
 
-a:hover, a.active {
-  text-shadow: 0 0 3px #ff29d865, 0 0 5px #fc5fff6e;
-  transition: text-shadow .7s;
-}
 
-@media only screen and (min-width: 100px) {
-	header, header ul{
-		display: column;
-	}
+li:hover, li.active {
+  transform: scale(1.1);
+  transition: transform 0.3s, text-shadow 0.1s;
+  text-shadow: 0 0 3px #ff29d8, 0 0 5px #fc5fff6e;
 }
-
-@media only screen and (min-width: 768px) {
-	header, header ul{
-		display: flex;
-	}
-}
-
-/*prompt: so this is a css sticky header, and it only works when I scroll down any solution or show my why is this is causing? */
