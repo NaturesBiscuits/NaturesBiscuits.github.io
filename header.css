@@ -7,7 +7,7 @@
     font-family: 'Poppins', sans-serif;
 }
 body{
-    background-color: #000;
+    background-color: #00000000;
     min-height: 200vh;
 }
 header {
@@ -28,6 +28,16 @@ header {
       padding: 20px 40px; /* Adjust padding for smaller screens */
   }
 }
+@media only screen and (max-width: 600px) {
+  ul li{
+      display: none;
+  }
+}
+@media only screen and (max-width: 600px) {
+  header .container{
+      display: inline-block;
+  }
+}
   header.sticky
   {
     padding: 5px 100px;
@@ -35,6 +45,7 @@ header {
   }
   header .logo
   {
+    white-space: nowrap;
     position: relative;
     font-weight: 700;
     color: #fff;
@@ -72,15 +83,50 @@ header {
     height: 35vh; /*how close the content bellow*/
     background-size: cover;
     }
-header.sticky .logo,
-header.sticky ul li a
-{
-  color: #000;
-}
 
+    header.sticky .logo,
+    header.sticky ul li a
+    {
+      color: #000000; /* Change to the desired color */
+    }
+  
+    header.sticky .container .bar1,
+    header.sticky .container .bar2,
+    header.sticky .container .bar3 {
+        background-color: #000000; /* Change to the desired color */
+    }
+    
 
 li:hover, li.active {
   transform: scale(1.1);
   transition: transform 0.3s, text-shadow 0.1s;
   text-shadow: 0 0 3px #ff29d8, 0 0 5px #fc5fff6e;
+}
+
+
+/* hamburger animation*/
+.container {
+  display: none;
+  cursor: pointer;
+}
+
+.bar1, .bar2, .bar3 {
+  width: 35px;
+  height: 5px;
+  background-color: #ffffff;
+  margin: 6px 0;
+  transition: 0.6s;
+}
+
+/* Rotate first bar */
+.change .bar1 {
+  transform: translate(0, 11px) rotate(-45deg);
+}
+
+/* Fade out the second bar */
+.change .bar2 {opacity: 0;}
+
+/* Rotate last bar */
+.change .bar3 {
+  transform: translate(0, -11px) rotate(45deg);
 }
