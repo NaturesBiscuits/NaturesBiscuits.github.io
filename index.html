@@ -14,17 +14,24 @@
 <body>
     <header id="header">
         <a href="#" class="logo">John Flores</a>
-        <div class="container" onclick="myFunction(this)">
-            <div class="bar1"></div>
-            <div class="bar2"></div>
-            <div class="bar3"></div>
-          </div>
             <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#">Projects</a></li>
-                <li><a href="#">Portfolio</a></li>
-                <li><a href="#">Contact</a></li>
+                <li class="hideonmobile"><a href="#">Home</a></li>
+                <li class="hideonmobile"><a href="#">Projects</a></li>
+                <li class="hideonmobile"><a href="#">Portfolio</a></li>
+                <li class="hideonmobile"><a href="#">Contact</a></li>
+                <div class="container" onclick="myFunction(this); toggleSidebar();">
+                    <div class="bar1"></div>
+                    <div class="bar2"></div>
+                    <div class="bar3"></div>
+                </div>
             </ul>
+            <ul>
+                <ul class="sidebar">
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">Projects</a></li>
+                    <li><a href="#">Portfolio</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
     </header>
     <script type="text/javascript">
     function myFunction(x) {
@@ -36,6 +43,20 @@
             var header = document.querySelector("header");
             header.classList.toggle("sticky", window.scrollY > 0);
         })
+    </script>
+    <script type="text/javascript">
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar.style.display === 'flex') {
+        sidebar.style.animationName = 'slide-up'; // Set closing animation
+        setTimeout(() => {
+            sidebar.style.display = 'none'; // Hide sidebar after animation completes
+        }, 600); // Adjust the timeout to match the animation duration
+    } else {
+        sidebar.style.display = 'flex';
+        sidebar.style.animationName = 'slide-down'; // Set opening animation
+    }
+}
     </script>
     <p id="p1">Welcome to my page</p>
     <div class="box"></div>
