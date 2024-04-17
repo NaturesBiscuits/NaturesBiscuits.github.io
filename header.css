@@ -22,26 +22,19 @@ header {
   padding: 40px 100px;
 }
 
-@media only screen and (max-width: 768px) {
-  header {
-      flex-direction: column; /* For smaller screens, switch to column layout */
-      padding: 20px 40px; /* Adjust padding for smaller screens */
-  }
+
+
+header .container{
+  display: inline-block;
 }
-@media only screen and (max-width: 600px) {
-  ul li{
-      display: none;
-  }
-}
-@media only screen and (max-width: 600px) {
-  header .container{
-      display: inline-block;
-  }
-}
+
+
   header.sticky
   {
     padding: 5px 100px;
-    background:rgb(255, 255, 255);
+    background-color: rgba(255, 255, 255, 0.378);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   }
   header .logo
   {
@@ -100,9 +93,42 @@ header {
 li:hover, li.active {
   transform: scale(1.1);
   transition: transform 0.3s, text-shadow 0.1s;
-  text-shadow: 0 0 3px #ff29d8, 0 0 5px #fc5fff6e;
+  text-shadow: 0 0 3px #ff47e062, 0 0 5px rgba(255, 0, 212, 0.431);
 }
 
+.sidebar{
+  position: fixed;
+  top: 24%;
+  left: 40%;
+  transform: translate(-50%, -50%);
+  height: 35vh;
+  width: 250px;
+  z-index: 999;
+  background-color: rgba(255, 255, 255, 0.129);
+  backdrop-filter: blur(10px);
+  box-shadow: -10px 0 10px rgba(0, 0, 0, 0.1);
+  display: none;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  border-radius: 25px;
+  animation-name: slide-down;
+  animation: slide-down 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+}
+
+header.sticky .sidebar{
+  display: none;
+} 
+
+.sidebar li{
+  width: 100%;
+  padding: 12px;
+  text-align: center;
+}
+
+.sidebar a{
+  width: 100%;
+}
 
 /* hamburger animation*/
 .container {
@@ -113,6 +139,7 @@ li:hover, li.active {
 .bar1, .bar2, .bar3 {
   width: 35px;
   height: 5px;
+  border-radius: 25px;
   background-color: #ffffff;
   margin: 6px 0;
   transition: 0.6s;
@@ -121,6 +148,7 @@ li:hover, li.active {
 /* Rotate first bar */
 .change .bar1 {
   transform: translate(0, 11px) rotate(-45deg);
+
 }
 
 /* Fade out the second bar */
@@ -129,4 +157,21 @@ li:hover, li.active {
 /* Rotate last bar */
 .change .bar3 {
   transform: translate(0, -11px) rotate(45deg);
+}
+
+@media only screen and (max-width: 768px) {
+  header{
+      flex-direction: column; 
+      padding: 20px 40px; 
+  }
+}
+@media only screen and (max-width: 600px) {
+  li.hideonmobile{
+      display: none;
+  }
+}
+@media only screen and (max-width: 600px) {
+  header .container{
+      display: inline-block;
+  }
 }
