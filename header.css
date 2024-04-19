@@ -25,7 +25,7 @@ header {
 
 
 header .container{
-  display: inline-block;
+  display: none;
 }
 
 
@@ -33,6 +33,7 @@ header .container{
   {
     padding: 5px 100px;
     background-color: rgba(255, 255, 255, 0.378);
+    z-index: 999;
     backdrop-filter: blur(10px);
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   }
@@ -93,15 +94,15 @@ header .container{
 li:hover, li.active {
   transform: scale(1.1);
   transition: transform 0.3s, text-shadow 0.1s;
-  text-shadow: 0 0 3px #ff47e062, 0 0 5px rgba(255, 0, 212, 0.431);
+  text-shadow: 0 0 3px #00000062, 0 0 5px rgba(0, 0, 0, 0.142);
 }
 
 .sidebar{
-  position: fixed;
-  top: 24%;
+  position: absolute;
+  top: 150px;
   left: 40%;
   transform: translate(-50%, -50%);
-  height: 35vh;
+  height: 25vh;
   width: 250px;
   z-index: 999;
   background-color: rgba(255, 255, 255, 0.129);
