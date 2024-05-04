@@ -14,7 +14,7 @@ margin: 50px auto 0 auto;
 border: 7px solid #0000005e;
 float: center;
 border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-background: url(https://github.com/NaturesBiscuits/NaturesBiscuits.github.io/blob/main/me.jpg?raw=true) no-repeat;
+background: url(https://raw.githubusercontent.com/NaturesBiscuits/NaturesBiscuits.github.io/main/me.webp) no-repeat;
 background-size: 110%;
 background-position: top -10px center;
 background-blend-mode: multiply;
