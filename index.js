@@ -48,3 +48,9 @@ function infobutton() {
         }, 600);
     }
 }
+
+// to open project 1
+
+function openInNewTab(url) {
+    window.open(url, '_blank');
+}
