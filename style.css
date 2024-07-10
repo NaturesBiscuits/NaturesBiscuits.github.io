@@ -298,3 +298,7 @@ item-1 {
     height: 170px; /* Let the height adjust naturally */
   }
 }
+
+.item-1 {
+    background: url(https://raw.githubusercontent.com/NaturesBiscuits/NaturesBiscuits.github.io/main/me.webp) no-repeat;
+}
