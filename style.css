@@ -305,9 +305,45 @@ item-1 {
     background-size: cover;
 }
 
+.item-2 {
+  background-image: url('instaclone.png');
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
 .item:hover{
     box-shadow: 0 0 20px 5px rgba(195, 0, 255, 0.8); /* Add glowing shadow */
     transform: scale(1.1);
     transition: transform 0.3s, text-shadow 0.1s;
     cursor: pointer;
+}
+
+.item-1:hover::after {
+  content: "Particle Simulator";
+  display:contents;
+  position: flex;
+  background-color: rgba(0, 0, 0, 0.501); /* Optional: background color for the text */
+  color: rgb(255, 255, 255); /* Text color */
+  padding: 5px; /* Optional: padding around the text */
+  border-radius: 5px; /* Optional: rounded corners */
+  bottom: 100%; /* Position below the item */
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap; /* Prevent text from wrapping */
+  z-index: 1000; /* Ensure it is above other elements */
+}
+
+.item-2:hover::after {
+  content: "Instagram Clone";
+  display:contents;
+  position: flex;
+  background-color: rgba(0, 0, 0, 0.501); /* Optional: background color for the text */
+  color: rgb(255, 255, 255); /* Text color */
+  padding: 5px; /* Optional: padding around the text */
+  border-radius: 5px; /* Optional: rounded corners */
+  bottom: 100%; /* Position below the item */
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap; /* Prevent text from wrapping */
+  z-index: 1000; /* Ensure it is above other elements */
 }
