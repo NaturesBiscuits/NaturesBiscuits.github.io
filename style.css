@@ -320,7 +320,7 @@ item-1 {
 
 .item-1:hover::after {
   content: "Particle Simulator";
-  display:contents;
+  display: contents;
   position: flex;
   background-color: rgba(0, 0, 0, 0.501); /* Optional: background color for the text */
   color: rgb(255, 255, 255); /* Text color */
@@ -335,9 +335,9 @@ item-1 {
 
 .item-2:hover::after {
   content: "Instagram Clone";
-  display:contents;
+  display: contents;
   position: flex;
-  background-color: rgba(0, 0, 0, 0.501); /* Optional: background color for the text */
+  background-color: rgba(0, 0, 0, 0.393); /* Optional: background color for the text */
   color: rgb(255, 255, 255); /* Text color */
   padding: 5px; /* Optional: padding around the text */
   border-radius: 5px; /* Optional: rounded corners */
