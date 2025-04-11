@@ -1,10 +1,14 @@
-#p1{
-  font-size: 35px;
-  padding-top: 40px;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  text-align: center;
-  animation: fade-up 0.7s;
+.header-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.typing, .auto-type {
   color: white;
+  font-family:'Courier New', Courier, monospace;
 }
 
 .box{
@@ -21,7 +25,7 @@ background-blend-mode: multiply;
 transition: border-color 6s ease-in-out infinite;
 animation: morph 6s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
 position: relative;
-margin-bottom: 400px;
+margin-bottom: 40px;
 cursor: pointer;
 }
 
@@ -339,4 +343,3 @@ item-1 {
 .item-2:hover::after {
   content: "Instagram Clone";
 }
-
