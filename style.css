@@ -22,6 +22,19 @@ body {
   line-height: 1.5;
 }
 
+#sky {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Let the sky show through the large panels; cards stay solid for readability. */
+.topbar { background: rgba(1, 4, 9, 0.6) !important; backdrop-filter: blur(2px); }
+.sidebar { background: rgba(1, 4, 9, 0.45) !important; }
+
 a { color: var(--link); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
