@@ -4,13 +4,13 @@
   const fx = document.getElementById('sky-fx'); // shooting stars, drawn above the content
   const sctx = sky.getContext('2d');
   const fctx = fx.getContext('2d');
-  const CELL_W = 10, CELL_H = 18, FONT = '14px ui-monospace, SFMono-Regular, Consolas, monospace';
+  const CELL_W = 10, CELL_H = 18, FONT = '14px "JetBrains Mono", Consolas, monospace';
   const STAR_CHARS = ['.', '.', '.', "'", "'", '+', '*'];
   const TRAIL = ['*', '=', '=', '-', '-', '-', '~', '~', '.', '.', "'", "'"]; // head -> tail
   const BASE_RGB = [145, 152, 161];   // #9198a1
-  const FLASH_TIME = 1.6;             // seconds for a glitter: fade to #FFFFFF and back
-  const GLITTER_RATE = 0.06;          // chance per star per second to start glittering
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const FLASH_TIME = 2.0;             // seconds for a glitter: fade to #FFFFFF and back
+  const GLITTER_RATE = 0.03;          // chance per star per second to start glittering
+
 
   let cols, rows, stars = [], shooters = [];
 
@@ -70,19 +70,22 @@
     }
 
     for (const s of stars) {
-      let a = reduce ? s.base : s.base + Math.sin(time * s.speed + s.phase) * 0.25;
+      let a = s.base + Math.sin(time * s.speed + s.phase) * 0.25;
       let mix = 0;
-      if (!reduce) {
-        if (s.flash < 0 && Math.random() < GLITTER_RATE * dt) s.flash = 0;
-        if (s.flash >= 0) {
-          s.flash += dt;
-          mix = Math.sin(Math.PI * Math.min(s.flash / FLASH_TIME, 1)); // 0 -> 1 -> 0
-          if (s.flash >= FLASH_TIME) s.flash = -1;
-        }
+      if (s.flash < 0 && Math.random() < GLITTER_RATE * dt) s.flash = 0;
+      if (s.flash >= 0) {
+        s.flash += dt;
+        mix = Math.sin(Math.PI * Math.min(s.flash / FLASH_TIME, 1)); // 0 -> 1 -> 0
+        if (s.flash >= FLASH_TIME) s.flash = -1;
       }
       const c = BASE_RGB.map(v => Math.round(v + (255 - v) * mix));
       a = a + (1 - a) * mix;
-      draw(sctx, s.x, s.y, s.ch, `rgb(${c})`, Math.max(0.08, a));
+      // While glittering the glyph grows . -> + -> * and glows at the peak.
+      const ch = mix > 0.75 ? '*' : mix > 0.35 ? '+' : s.ch;
+      sctx.shadowColor = '#ffffff';
+      sctx.shadowBlur = mix * 10;
+      draw(sctx, s.x, s.y, ch, `rgb(${c})`, Math.max(0.08, a));
+      sctx.shadowBlur = 0;
     }
 
     shooters = shooters.filter(sh => {
@@ -105,7 +108,7 @@
 
   addEventListener('resize', resize);
   resize();
-  if (!reduce) setInterval(spawnShooter, 5000);
+  setInterval(spawnShooter, 5000);
   document.getElementById('shoot-btn')?.addEventListener('click', spawnShooter);
   requestAnimationFrame(frame);
 })();
