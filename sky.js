@@ -11,9 +11,11 @@
   const STAR_RGB = [145, 152, 161];      // #9198a1, the resting star color
   const DENSITY = 0.035;                 // share of grid cells holding a star
 
-  // Glitter: a star fades in to #FFFFFF (growing . -> + -> * with a glow), then fades back.
-  const GLITTER_RATE = 0.08;             // chance per star per second to start glittering
-  const GLITTER_MIN = 1.2, GLITTER_MAX = 2.4; // seconds for one fade in + fade out
+  // Glitter: a star fades in to #FFFFFF growing . -> + -> * (soft glow), then fades back.
+  // Every couple of seconds, a couple of random stars start glittering.
+  const GLITTER_EVERY_MIN = 1.5, GLITTER_EVERY_MAX = 3; // seconds between glitter batches
+  const GLITTER_BATCH_MIN = 1, GLITTER_BATCH_MAX = 2;   // stars per batch
+  const GLITTER_MIN = 3.5, GLITTER_MAX = 6; // seconds for one slow fade in + fade out
 
   // Shooting star: one character per row and column, so it is a single clean diagonal.
   //   *
@@ -26,6 +28,19 @@
 
   let cols = 0, rows = 0, stars = [], shooters = [];
   let sinceShot = 0;
+  let nextGlitter = 1;
+
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  function startGlitters() {
+    const n = Math.round(rand(GLITTER_BATCH_MIN, GLITTER_BATCH_MAX));
+    for (let i = 0; i < n; i++) {
+      const s = stars[Math.floor(Math.random() * stars.length)];
+      if (!s || s.glitter >= 0) continue;
+      s.glitter = 0;
+      s.length = rand(GLITTER_MIN, GLITTER_MAX);
+    }
+  }
 
   function resize() {
     const dpr = window.devicePixelRatio || 1;
@@ -104,22 +119,24 @@
       return sh.x - tail > -1 && sh.y + tail < rows + 1;
     });
 
-    // 2. Stars (front layer): gentle twinkle plus random glitter to white.
+    // 2. Stars (front layer): gentle twinkle plus the occasional slow glitter to white.
+    nextGlitter -= dt;
+    if (nextGlitter <= 0) {
+      startGlitters();
+      nextGlitter = rand(GLITTER_EVERY_MIN, GLITTER_EVERY_MAX);
+    }
     for (const s of stars) {
       let alpha = s.base + Math.sin(time * s.speed + s.phase) * 0.2;
       let m = 0;
-      if (s.glitter < 0 && Math.random() < GLITTER_RATE * dt) {
-        s.glitter = 0;
-        s.length = GLITTER_MIN + Math.random() * (GLITTER_MAX - GLITTER_MIN);
-      }
       if (s.glitter >= 0) {
         s.glitter += dt;
         const p = Math.min(s.glitter / s.length, 1);
-        m = Math.sin(Math.PI * p);           // 0 -> 1 -> 0 : fade in, fade out
+        m = Math.sin(Math.PI * p) ** 2;      // eased 0 -> 1 -> 0 : slow fade in, slow fade out
         if (p >= 1) s.glitter = -1;
       }
-      const ch = m > 0.7 ? '*' : m > 0.3 ? '+' : s.ch;
-      cell(s.x, s.y, ch, mixToWhite(STAR_RGB, m), alpha + (1 - alpha) * m, m * 12);
+      // Grow . -> + -> * as it brightens, then shrink back as it fades.
+      const ch = m > 0.75 ? '*' : m > 0.35 ? '+' : s.ch;
+      cell(s.x, s.y, ch, mixToWhite(STAR_RGB, m), alpha + (1 - alpha) * m, m * 5);
     }
 
     ctx.globalAlpha = 1;
