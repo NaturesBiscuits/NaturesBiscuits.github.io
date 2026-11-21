@@ -12,9 +12,9 @@
   const DENSITY = 0.035;                 // share of grid cells holding a star
 
   // Glitter: a star fades in to #FFFFFF growing . -> + -> * (soft glow), then fades back.
-  // Every couple of seconds, a couple of random stars start glittering.
-  const GLITTER_EVERY_MIN = 1.5, GLITTER_EVERY_MAX = 3; // seconds between glitter batches
-  const GLITTER_BATCH_MIN = 1, GLITTER_BATCH_MAX = 2;   // stars per batch
+  // About 2 stars per second start glittering, one at a time at staggered moments.
+  const GLITTER_EVERY_MIN = 0.3, GLITTER_EVERY_MAX = 0.7; // seconds between glitters (avg 0.5s)
+  const GLITTER_BATCH_MIN = 1, GLITTER_BATCH_MAX = 1;     // one star per glitter
   const GLITTER_MIN = 3.5, GLITTER_MAX = 6; // seconds for one slow fade in + fade out
 
   // Shooting star: one character per row and column, so it is a single clean diagonal.
@@ -146,7 +146,6 @@
 
   addEventListener('resize', resize);
   resize();
-  document.getElementById('shoot-btn')?.addEventListener('click', spawnShooter);
   window.spawnShooter = spawnShooter;
   requestAnimationFrame(frame);
 })();
