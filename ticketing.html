@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ticketing | John Flores</title>
+  <meta name="description" content="High-concurrency event ticketing platform: race-condition-free seat booking with ACID transactions and row-level locking in PostgreSQL, real-time seat sync over WebSockets, and a live load-test lab that races 100 bots for one seat.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;700&display=swap">
+  <link rel="stylesheet" href="style.css?v=20">
+</head>
+<body>
+  <canvas id="sky" aria-hidden="true" style="position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none"></canvas>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1><a href="index.html">John Flores</a></h1>
+      <a class="back" href="index.html">&larr; All projects</a>
+    </div>
+  </header>
+
+  <main class="page tk">
+    <header class="tk-head">
+      <p class="kicker">Case study &middot; Full-stack &middot; High-concurrency systems</p>
+      <h2>Ticketing System</h2>
+      <p class="tagline">A seat sells <span class="hl">exactly once</span>, even when 100 people click it at the same instant.</p>
+    </header>
+
+    <section class="row hero-row">
+      <div>
+        <a class="media visit" href="https://ticketing-system-skmi.vercel.app/" target="_blank" rel="noopener">
+          <img src="img/ticketing/home.webp" alt="The Ticketing home page: a big YOU HAD TO BE THERE headline next to a featured event poster" width="1440" height="900">
+          <span class="visit-over"><b>Visit the live site &nearr;</b><span>ticketing-system-skmi.vercel.app</span></span>
+        </a>
+        <div class="cta under">
+          <a class="btn primary orange" href="https://ticketing-system-skmi.vercel.app/" target="_blank" rel="noopener">Visit the live site &nearr;</a>
+          <a class="btn" href="https://github.com/NaturesBiscuits/TicketingSystem" target="_blank" rel="noopener">Source on GitHub</a>
+        </div>
+        <div class="skills">
+          <p class="st-title">What this project demonstrates</p>
+          <ul>
+            <li><b>High-concurrency transactions</b><small>200 concurrent buyers, 1 sale</small></li>
+            <li><b>Race-condition-free booking</b><small>zero oversell, enforced in SQL</small></li>
+            <li><b>Pessimistic row-level locking</b><small>SELECT &hellip; FOR UPDATE</small></li>
+            <li><b>Deadlock prevention</b><small>deterministic lock ordering</small></li>
+            <li><b>Atomic, all-or-nothing writes</b><small>PL/pgSQL &middot; rollback on conflict</small></li>
+            <li><b>Real-time sync over WebSockets</b><small>pub/sub broadcast &middot; presence</small></li>
+            <li><b>Idempotent payment webhooks</b><small>replays return the same order</small></li>
+            <li><b>Traffic-spike protection</b><small>virtual waiting room &middot; rate limits</small></li>
+            <li><b>Row-level security (RLS)</b><small>least-privilege Postgres roles</small></li>
+            <li><b>CI/CD and automated testing</b><small>270+ pgTAP assertions &middot; E2E</small></li>
+          </ul>
+        </div>
+      </div>
+      <div class="txt">
+        <p class="lede">A full-stack event ticketing platform. Fans pick seats on a real-time seat map, hold them for 10 minutes, check out with simulated test cards and get a QR door pass. Organizers manage venues, section pricing and gate check-in.</p>
+        <p>Built for <b>high-concurrency inventory management</b>: in a flash-sale spike, hundreds of buyers contend for the same database rows at the same instant. Every booking write is an <b>ACID transaction</b> in a <code>SECURITY DEFINER</code> PL/pgSQL function, using <b>pessimistic row-level locking</b> (<code>SELECT &hellip; FOR UPDATE</code>), <b>deterministic lock ordering</b> to prevent deadlocks, and constraints as the last line of defence. Overselling a seat, half-holding a group and duplicate orders are ruled out by the database itself, not by application code.</p>
+        <p class="howto"><b>Try it as a guest:</b> click the screenshot, press <b>Sign in</b>, then <b>Fill in the sample account</b>. Payments are simulated, so nothing is ever charged.</p>
+        <div class="stack">
+          <div><span>Frontend</span><ul><li><img src="icons/typescript.svg" alt="">TypeScript</li><li><img src="icons/react.svg" alt="">React 19</li><li><img class="inv" src="icons/nextjs.svg" alt="">Next.js 16</li><li><img src="icons/tailwindcss.svg" alt="">Tailwind CSS</li><li>TanStack Query</li><li>Zustand</li></ul></div>
+          <div><span>Backend</span><ul><li><img src="icons/supabase.svg" alt="">Supabase</li><li><img src="icons/postgresql.svg" alt="">PostgreSQL</li><li>Realtime</li><li>pg_cron</li><li><img class="inv" src="icons/vercel.svg" alt="">Vercel</li></ul></div>
+          <div><span>Testing</span><ul><li>pgTAP</li><li><img src="icons/vitest.svg" alt="">Vitest</li><li><img src="icons/playwright.svg" alt="">Playwright</li><li><img src="icons/githubactions.svg" alt="">GitHub Actions</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="row tall">
+      <a class="media zoom" href="img/ticketing/live.gif" aria-label="Enlarge: Two browsers on the same event: when the first fan picks and reserves seats, they turn held on the second fan’s map within a second">
+          <picture>
+            <source srcset="img/ticketing/live-poster.webp" media="(prefers-reduced-motion: reduce)">
+            <img src="img/ticketing/live.gif" alt="Two browsers on the same event: when the first fan picks and reserves seats, they turn held on the second fan’s map within a second" width="1100" height="683" loading="lazy">
+          </picture>
+          <span class="zoom-hint" aria-hidden="true">&#x2922; Enlarge</span>
+        </a>
+      <div class="txt">
+        <p class="kicker">01 &middot; Real-time state synchronization</p>
+        <h2>Every fan sees the same map, live</h2>
+        <ul class="terms"><li>WebSockets</li><li>Pub/sub broadcast</li><li>Presence tracking</li><li>Event-driven DB triggers</li><li>Cache revalidation</li></ul>
+        <p>Recorded with two separate browser sessions on the live site. Fan 1 selects and reserves seats; Fan 2&rsquo;s map shows the selection, then the hold, without a reload.</p>
+        <p class="legend"><span class="sw eye"></span>Selected by another fan (presence)<span class="sw held"></span><code>HELD</code> for 10 minutes</p>
+        <h3>How it works</h3>
+        <ul class="ticks">
+          <li><b>Database push.</b> A statement-level <code>AFTER UPDATE</code> trigger on <code>event_seats</code> diffs the transition tables and calls <code>realtime.send()</code> once per statement on <code>event:&lt;id&gt;:seats</code>. The payload is only <code>{seatId, status}</code>: no owners, prices or reservation ids.</li>
+          <li><b>Hints, not truth.</b> A broadcast patches the TanStack Query cache with <code>setQueryData</code>, then invalidates it so the authoritative snapshot is refetched, as it always is after a reconnect. A failed broadcast is caught and can never roll back a booking.</li>
+          <li><b>Presence.</b> Each tab joins <code>event:&lt;id&gt;:viewers</code> under a random key and tracks its selected seat ids, throttled to one update every 2&nbsp;s. No user ids leave the browser.</li>
+          <li><b>Expiry on read.</b> A <code>HELD</code> seat past <code>held_until</code> reads as available in every query, so correctness never waits on a job; pg_cron only tidies rows once a minute.</li>
+        </ul>
+        <p class="note">Try it: open one event in two browser tabs and select a seat in one. <a href="https://ticketing-system-skmi.vercel.app/events" target="_blank" rel="noopener">Browse events &nearr;</a></p>
+      </div>
+    </section>
+
+    <section class="row flip tall with-structure">
+      <div class="txt">
+        <p class="kicker">02 &middot; Concurrency Lab &middot; Load-test simulation</p>
+        <h2>100 bots. 1 seat. <span class="hl">0 duplicates.</span></h2>
+        <ul class="terms"><li>Race-condition testing</li><li>Pessimistic locking</li><li>ACID transactions</li><li>Idempotency</li><li>Connection pooling</li><li>Request tracing</li></ul>
+        <p>A <b>concurrency stress test</b> built into the live site: it simulates a flash-sale burst against the production booking functions, on a hidden sandbox event. Every bot is its own HTTP call and its own Postgres transaction, signed in as a different user through a transaction-local <code>set_config(&#39;request.jwt.claims&#39;)</code>.</p>
+        <ol class="races">
+          <li><small>01</small><b>One seat, one crowd</b><span>100 &times; <code>reserve_seats</code> on A1 &rarr; 1 <code>HELD</code>, 99 <code>SEAT_UNAVAILABLE</code></span></li>
+          <li><small>02</small><b>Overlapping groups</b><span>Overlapping 3-seat runs &rarr; no seat in two holds</span></li>
+          <li><small>03</small><b>Duplicate webhooks</b><span>1 payment, webhook &times;20 &rarr; 1 order (idempotent)</span></li>
+          <li><small>04</small><b>Door race</b><span>20 scanners, 2 gates &rarr; 1 <code>ADMITTED</code></span></li>
+        </ol>
+        <ul class="ticks">
+          <li><b>Traced.</b> A savepoint wrapper returns <code>pg_backend_pid()</code>, the transaction id and <code>clock_timestamp()</code> for every call, streamed into a read-only Postgres terminal: 100 requests, about 10 pooled backends, 100 transactions.</li>
+          <li><b>Rate-limited in SQL.</b> A lease row allows one run at a time, with budgets of 3 runs per visitor per 10 minutes (an HMAC of the IP) and 60 per hour site-wide.</li>
+        </ul>
+        <p class="try"><a class="btn primary orange" href="https://ticketing-system-skmi.vercel.app/lab" target="_blank" rel="noopener">Try the simulation &nearr;</a><span>Send 100 bots at one seat</span></p>
+      </div>
+      <a class="media zoom" href="img/ticketing/lab.gif" aria-label="Enlarge: The Concurrency Lab sends 100 bots at seat A1: the Postgres terminal lists 99 refusals, and the verdict reads PASSED, ZERO DUPLICATES">
+          <picture>
+            <source srcset="img/ticketing/lab-poster.webp" media="(prefers-reduced-motion: reduce)">
+            <img src="img/ticketing/lab.gif" alt="The Concurrency Lab sends 100 bots at seat A1: the Postgres terminal lists 99 refusals, and the verdict reads PASSED, ZERO DUPLICATES" width="960" height="675" loading="lazy">
+          </picture>
+          <span class="zoom-hint" aria-hidden="true">&#x2922; Enlarge</span>
+        </a>
+    </section>
+      <div class="structure">
+        <div>
+          <p class="st-title">How one race runs</p>
+          <svg class="fc" viewBox="0 0 420 554" text-anchor="middle" role="img" aria-label="Flowchart of one race: you press Send 100 at once; the server fires 100 requests at once; each runs as its own transaction; each locks seat A1 one at a time; if A1 is still available it is marked held and committed (1 request), otherwise 0 rows match and it rolls back (99 requests get SEAT_UNAVAILABLE); finally the database audits itself."><defs><marker id="fc-race" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs><path class="edge" d="M210 56V76" marker-end="url(#fc-race)"/><path class="edge" d="M210 124V144" marker-end="url(#fc-race)"/><path class="edge" d="M210 192V212" marker-end="url(#fc-race)"/><path class="edge" d="M210 260V280" marker-end="url(#fc-race)"/><path class="edge" d="M210 380V394H105V414" marker-end="url(#fc-race)"/><path class="edge" d="M210 394H315V414" marker-end="url(#fc-race)"/><text class="lbl yes" x="150" y="389" text-anchor="middle">yes</text><text class="lbl no" x="270" y="389" text-anchor="middle">no</text><path class="edge" d="M105 462V480H210"/><path class="edge" d="M315 462V480H210"/><path class="edge" d="M210 480V500" marker-end="url(#fc-race)"/><rect x="70" y="10" width="280" height="46" rx="23.0" fill="rgba(31,111,235,0.14)" stroke="#1f6feb"/><text x="210.0" y="30.0">You press “Send 100 at once”</text><text class="sub" x="210.0" y="47.0">POST /api/lab/run</text><rect x="70" y="76" width="280" height="48" rx="7" fill="var(--bg-inset)" stroke="var(--border)"/><text x="210.0" y="97.0">Server fires 100 requests at once</text><text class="sub" x="210.0" y="114.0">Promise.all · 100 HTTP calls</text><rect x="70" y="144" width="280" height="48" rx="7" fill="var(--bg-inset)" stroke="var(--border)"/><text x="210.0" y="165.0">Each runs as its own transaction</text><text class="sub" x="210.0" y="182.0">reserve_seats · ~10 pooled connections</text><rect x="70" y="212" width="280" height="48" rx="7" fill="var(--bg-inset)" stroke="var(--border)"/><text x="210.0" y="233.0">Lock seat A1, one at a time</text><text class="sub" x="210.0" y="250.0">SELECT … FOR UPDATE · others wait</text><path d="M210 280L322 330L210 380L98 330Z" fill="rgba(210,153,34,0.12)" stroke="#d29922"/><text x="210" y="327">Is A1 still</text><text x="210" y="345">AVAILABLE?</text><rect x="10" y="414" width="190" height="48" rx="7" fill="rgba(63,185,80,0.12)" stroke="#3fb950"/><text x="105.0" y="435.0">Mark it HELD, commit</text><text class="sub" x="105.0" y="452.0">1 request wins</text><rect x="220" y="414" width="190" height="48" rx="7" fill="rgba(248,81,73,0.12)" stroke="#f85149"/><text x="315.0" y="435.0">0 rows → roll back</text><text class="sub" x="315.0" y="452.0">99 × SEAT_UNAVAILABLE</text><rect x="70" y="500" width="280" height="46" rx="23.0" fill="rgba(31,111,235,0.14)" stroke="#1f6feb"/><text x="210.0" y="520.0">Database audits itself</text><text class="sub" x="210.0" y="537.0">lab_verify(): every count = 0</text></svg>
+        </div>
+        <div>
+          <p class="st-title">What every request runs (simplified <code>reserve_seats</code>)</p>
+          <pre class="code"><code><span class="c">-- one transaction per request</span>
+<span class="k">SELECT</span> 1 <span class="k">FROM</span> event_seats
+ <span class="k">WHERE</span> seat_id = <span class="k">ANY</span>(seats)
+ <span class="k">ORDER BY</span> seat_id
+   <span class="k">FOR UPDATE</span>;                <span class="c">-- wait for the row lock</span>
+
+<span class="k">UPDATE</span> event_seats
+   <span class="k">SET</span> status = <span class="s">&#39;HELD&#39;</span>,
+       held_until = <span class="f">now</span>() + <span class="k">interval</span> <span class="s">&#39;10 minutes&#39;</span>
+ <span class="k">WHERE</span> seat_id = <span class="k">ANY</span>(seats)
+   <span class="k">AND</span> status = <span class="s">&#39;AVAILABLE&#39;</span>;    <span class="c">-- only seats still free</span>
+
+<span class="k">IF</span> row_count &lt;&gt; <span class="f">cardinality</span>(seats) <span class="k">THEN</span>
+  <span class="k">RAISE</span> <span class="s">&#39;SEAT_UNAVAILABLE&#39;</span>;     <span class="c">-- undo it all: all or nothing</span>
+<span class="k">END IF</span>;</code></pre>
+          <p class="st-note">Locking in <code>seat_id</code> order means two overlapping group requests always queue in the same order, so they can&rsquo;t deadlock.</p>
+        </div>
+      </div>
+
+    <section class="row tall with-structure">
+      <a class="media zoom" href="img/ticketing/groups.gif" aria-label="Enlarge: The group seating simulation: 16 bot fans race for overlapping seats over three rounds, then a refused fan is offered seats side by side in another row">
+          <picture>
+            <source srcset="img/ticketing/groups-poster.webp" media="(prefers-reduced-motion: reduce)">
+            <img src="img/ticketing/groups.gif" alt="The group seating simulation: 16 bot fans race for overlapping seats over three rounds, then a refused fan is offered seats side by side in another row" width="1000" height="649" loading="lazy">
+          </picture>
+          <span class="zoom-hint" aria-hidden="true">&#x2922; Enlarge</span>
+        </a>
+      <div class="txt">
+        <p class="kicker">03 &middot; Seat-allocation algorithm &middot; Simulation</p>
+        <h2>The group seating algorithm</h2>
+        <ul class="terms"><li>Heuristic search</li><li>Weighted cost function</li><li>Greedy expansion</li><li>Atomic multi-row holds</li><li>Contention-aware ranking</li></ul>
+        <p>This is the lab&rsquo;s group seating simulation, not a real sale: 6 to 24 bot fans, each booking for a party of 1 to 4, request overlapping seats at the same instant. It runs the same code a real booking does: <code>reserve_seats</code> in Postgres and the seat planner from the booking dialog.</p>
+        <h3>How it works</h3>
+        <ul class="ticks">
+          <li><b>Atomic hold.</b> The same <code>reserve_seats</code> as above. A group&rsquo;s rows are locked and claimed in one transaction; if <code>row_count</code> is short, the whole group is rolled back. A group is held whole or not at all.</li>
+          <li><b>Candidate search.</b> The planner (<code>findGroupPlans()</code>, TypeScript in the browser) maps seats to coordinates and generates three tiers: contiguous runs in one row, runs stacked over 2 to 4 consecutive rows (every split of the party size), and greedy nearest-seat growth from up to 60 seeds.</li>
+          <li><b>Ranked by cost.</b> Every candidate gets a cost; the lowest is offered as the best match, as shown below.</li>
+        </ul>
+        <p class="try"><a class="btn primary orange" href="https://ticketing-system-skmi.vercel.app/lab/groups" target="_blank" rel="noopener">Try the simulation &nearr;</a><span>Run the group seating race</span></p>
+      </div>
+    </section>
+      <div class="structure">
+        <div>
+          <p class="st-title">How a group race runs</p>
+          <svg class="fc" viewBox="0 0 440 556" text-anchor="middle" role="img" aria-label="Flowchart of the group seating race: a random crowd picks overlapping seats; every group reserves at once; if all of a group&#x27;s seats are still free the whole group is held; otherwise nothing is held, and if rounds are left the planner offers new seats and the fan races again, for up to 3 rounds; finally the database audits itself."><defs><marker id="fc-groups" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs><path class="edge" d="M220 56V76" marker-end="url(#fc-groups)"/><path class="edge" d="M220 124V144" marker-end="url(#fc-groups)"/><path class="edge" d="M220 244V258H105V278" marker-end="url(#fc-groups)"/><path class="edge" d="M220 258H315V278" marker-end="url(#fc-groups)"/><text class="lbl yes" x="160" y="253" text-anchor="middle">yes</text><text class="lbl no" x="280" y="253" text-anchor="middle">no</text><path class="edge" d="M315 326V346" marker-end="url(#fc-groups)"/><path class="edge" d="M315 406V426" marker-end="url(#fc-groups)"/><text class="lbl yes" x="325" y="420" text-anchor="start">yes</text><path class="edge" d="M410 450H428V100H360" marker-end="url(#fc-groups)"/><text class="lbl loop" x="394" y="93" text-anchor="middle">retry</text><path class="edge" d="M229 376H213V502" marker-end="url(#fc-groups)"/><text class="lbl no" x="221" y="369" text-anchor="middle">no</text><path class="edge" d="M105 326V502" marker-end="url(#fc-groups)"/><rect x="80" y="10" width="280" height="46" rx="23.0" fill="rgba(31,111,235,0.14)" stroke="#1f6feb"/><text x="220.0" y="30.0">A random crowd picks seats</text><text class="sub" x="220.0" y="47.0">6–24 bots · parties of 1–4</text><rect x="80" y="76" width="280" height="48" rx="7" fill="var(--bg-inset)" stroke="var(--border)"/><text x="220.0" y="97.0">Every group reserves at once</text><text class="sub" x="220.0" y="114.0">reserve_seats · 1 transaction each</text><path d="M220 144L332 194L220 244L108 194Z" fill="rgba(210,153,34,0.12)" stroke="#d29922"/><text x="220" y="191">All of its seats</text><text x="220" y="209">still free?</text><rect x="10" y="278" width="190" height="48" rx="7" fill="rgba(63,185,80,0.12)" stroke="#3fb950"/><text x="105.0" y="299.0">Whole group HELD</text><text class="sub" x="105.0" y="316.0">commit · group seated</text><rect x="220" y="278" width="190" height="48" rx="7" fill="rgba(248,81,73,0.12)" stroke="#f85149"/><text x="315.0" y="299.0">Nothing is held</text><text class="sub" x="315.0" y="316.0">SEAT_UNAVAILABLE · rollback</text><path d="M315 346L401 376L315 406L229 376Z" fill="rgba(210,153,34,0.12)" stroke="#d29922"/><text x="315" y="373">Rounds left?</text><text class="sub" x="315" y="390">max 3</text><rect x="226" y="426" width="184" height="48" rx="7" fill="var(--bg-inset)" stroke="var(--border)"/><text x="318.0" y="447.0">Get new seat options</text><text class="sub" x="318.0" y="464.0">planRegroup() · best match</text><rect x="80" y="502" width="280" height="46" rx="23.0" fill="rgba(31,111,235,0.14)" stroke="#1f6feb"/><text x="220.0" y="522.0">Database audits itself</text><text class="sub" x="220.0" y="539.0">lab_verify() · no half-held group</text></svg>
+        </div>
+        <div>
+          <p class="st-title">How options are ranked</p>
+          <div class="shapes">
+            <figure><div class="mini" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><figcaption><b>One row</b>cost +0</figcaption></figure>
+            <figure><div class="mini" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i></div><figcaption><b>One behind the other</b>cost +40</figcaption></figure>
+            <figure><div class="mini" aria-hidden="true"><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i></div><figcaption><b>Scattered</b>cost +120</figcaption></figure>
+          </div>
+          <pre class="formula"><code>cost  = shape + 4&middot;dist + 30&middot;&Delta;price + 12&middot;eyed
+shape = 0 one row &middot; 40+ stacked &middot; 120+ scattered
+dist  = |&Delta;x| + 1.5&middot;|&Delta;row|  <i>// to the seats you wanted</i>
+eyed  = seats other fans have selected right now</code></pre>
+          <p class="st-note">Simplified from <code>findGroupPlans()</code>. It runs in about 10 to 20&nbsp;ms on a 660-seat venue and only advises; Postgres decides every hold.</p>
+        </div>
+      </div>
+
+    <section class="row flip tall">
+      <div class="txt">
+        <p class="kicker">04 &middot; Responsive, accessible UI</p>
+        <h2>The same app on a phone</h2>
+        <ul class="terms"><li>Responsive design</li><li>ARIA + keyboard navigation</li><li>Design tokens</li><li>Dark mode, no flash</li></ul>
+        <p>Screenshots from the live site at a 390&nbsp;px phone width: the home page, the seat map with two seats selected, and the Concurrency Lab.</p>
+        <h3>How it works</h3>
+        <ul class="ticks">
+          <li><b>Responsive layout.</b> Tailwind CSS v4 plus CSS custom-property design tokens. The seat map sizes itself from a <code>--seats-per-row</code> variable and scrolls inside its own region when it&rsquo;s wider than the screen.</li>
+          <li><b>Accessible seat map.</b> Every seat is a real <code>&lt;button&gt;</code> with <code>aria-pressed</code> and a full text label, so it works with Tab, Enter and Space as well as touch.</li>
+          <li><b>Light and dark.</b> Tokens key off <code>&lt;html data-theme&gt;</code>. An inline script in <code>&lt;head&gt;</code> applies the saved choice, or the system setting, before the first paint, so there&rsquo;s no flash.</li>
+        </ul>
+      </div>
+      <div class="phones">
+        <a class="zoom" href="img/ticketing/m-home.webp"><img src="img/ticketing/m-home.webp" alt="Home page on a phone" width="780" height="1688" loading="lazy"></a>
+        <a class="zoom" href="img/ticketing/m-seats.webp"><img src="img/ticketing/m-seats.webp" alt="Seat map on a phone with two seats selected" width="780" height="1688" loading="lazy"></a>
+        <a class="zoom" href="img/ticketing/m-lab.webp"><img src="img/ticketing/m-lab.webp" alt="Concurrency Lab on a phone" width="780" height="1688" loading="lazy"></a>
+      </div>
+    </section>
+
+    <section class="tk-sec">
+      <p class="kicker">05 &middot; Data modeling &amp; security</p>
+      <h2>Database architecture</h2>
+      <ul class="terms"><li>Relational schema design</li><li>Data-integrity constraints</li><li>Row-level security</li><li>Stored procedures (PL/pgSQL)</li><li>Scheduled jobs (pg_cron)</li></ul>
+      <p class="sec-lead">All 21 tables of the live Supabase project: 17 public, and 4 private, server-only ones along the bottom. Venues and seating are on the left, events in the middle, and bookings, payments and tickets on the right. Arrows point from a foreign key to the table it references. The highlighted <code>event_seats</code> table is the one every booking fights over.</p>
+      <ul class="facts">
+        <li><b>21</b> tables</li><li><b>63</b> functions</li><li><b>20</b> triggers</li><li><b>2</b> pg_cron jobs</li><li>Row-level security on <b>every</b> public table</li>
+      </ul>
+      <div class="erd-box">
+      <div class="erd-wrap" tabindex="0" role="region" aria-label="Database diagram, scrollable">
+<svg class='erd' viewBox='0 0 960 1160' role='img' aria-label='Entity-relationship diagram of the 21 tables in the Ticketing database: 17 public and 4 private' font-size='12'>
+<defs><marker id='erd-arrow' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='6' markerHeight='6' orient='auto-start-reverse'><path d='M0 0L10 5L0 10z' fill='var(--muted)'/></marker></defs>
+<g data-edges fill='none' stroke='var(--muted)' stroke-width='1.25'>
+<path d='M95 218V238' marker-end='url(#erd-arrow)'/>
+<path d='M95 366V346' marker-end='url(#erd-arrow)'/>
+<path d='M95 530V510' marker-end='url(#erd-arrow)'/>
+<path d='M95 658V638' marker-end='url(#erd-arrow)'/>
+<path d='M256 300H190' marker-end='url(#erd-arrow)'/>
+<path d='M256 420H190' marker-end='url(#erd-arrow)'/>
+<path d='M256 560H190' marker-end='url(#erd-arrow)'/>
+<path d='M256 700H190' marker-end='url(#erd-arrow)'/>
+<path d='M351 212V240' marker-end='url(#erd-arrow)'/>
+<path d='M351 476V456' marker-end='url(#erd-arrow)'/>
+<path d='M351 622V602' marker-end='url(#erd-arrow)'/>
+<path d='M512 330H446' marker-end='url(#erd-arrow)'/>
+<path d='M512 444H446' marker-end='url(#erd-arrow)'/>
+<path d='M512 660H446' marker-end='url(#erd-arrow)'/>
+<path d='M446 636H479V500H512' marker-end='url(#erd-arrow)'/>
+<path d='M607 576V556' marker-end='url(#erd-arrow)'/>
+<path d='M702 736H718V540H702' marker-end='url(#erd-arrow)'/>
+<path d='M768 500H702' marker-end='url(#erd-arrow)'/>
+<path d='M768 584H744V800H702' marker-end='url(#erd-arrow)'/>
+<path d='M863 616V596' marker-end='url(#erd-arrow)'/>
+<path d='M863 780V760' marker-end='url(#erd-arrow)'/>
+<path d='M768 30H702' marker-end='url(#erd-arrow)'/>
+<path d='M256 1010H190' marker-end='url(#erd-arrow)'/>
+</g>
+<g><rect x='0' y='940' width='958' height='196' rx='8' fill='none' stroke='var(--border)' stroke-dasharray='5 5'/>
+<text x='14' y='962' font-size='12' font-weight='600' fill='var(--text)'>ticketing_private schema</text>
+<text x='944' y='962' font-size='11' text-anchor='end' fill='var(--muted)'>server only: anon and authenticated have no privileges here</text></g>
+<g><rect x='0' y='128' width='190' height='90' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='12' y='147' font-size='13' font-weight='600' fill='var(--text)'>organizer_members</text>
+<line x1='0' x2='190' y1='156' y2='156' stroke='var(--border-muted)'/>
+<text class='mono' x='12' y='170' font-size='11' fill='var(--text)'>organizer_id</text>
+<text class='mono' x='178' y='170' font-size='10' text-anchor='end' fill='var(--green)'>PK FK</text>
+<text class='mono' x='12' y='188' font-size='11' fill='var(--text)'>user_id</text>
+<text class='mono' x='178' y='188' font-size='10' text-anchor='end' fill='var(--green)'>PK → auth</text>
+<text class='mono' x='12' y='206' font-size='11' fill='var(--text)'>role</text>
+</g>
+<g><rect x='0' y='238' width='190' height='108' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='12' y='257' font-size='13' font-weight='600' fill='var(--text)'>organizers</text>
+<line x1='0' x2='190' y1='266' y2='266' stroke='var(--border-muted)'/>
+<text class='mono' x='12' y='280' font-size='11' fill='var(--text)'>id</text>
+<text class='mono' x='178' y='280' font-size='10' text-anchor='end' fill='var(--green)'>PK</text>
+<text class='mono' x='12' y='298' font-size='11' fill='var(--text)'>name</text>
+<text class='mono' x='12' y='316' font-size='11' fill='var(--text)'>slug</text>
+<text class='mono' x='178' y='316' font-size='10' text-anchor='end' fill='var(--link)'>UQ</text>
+<text class='mono' x='12' y='334' font-size='11' fill='var(--text)'>owner_user_id</text>
+<text class='mono' x='178' y='334' font-size='10' text-anchor='end' fill='var(--muted)'>→ auth</text>
+</g>
+<g><rect x='0' y='366' width='190' height='144' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='12' y='385' font-size='13' font-weight='600' fill='var(--text)'>venues</text>
+<line x1='0' x2='190' y1='394' y2='394' stroke='var(--border-muted)'/>
+<text class='mono' x='12' y='408' font-size='11' fill='var(--text)'>id</text>
+<text class='mono' x='178' y='408' font-size='10' text-anchor='end' fill='var(--green)'>PK</text>
+<text class='mono' x='12' y='426' font-size='11' fill='var(--text)'>organizer_id</text>
+<text class='mono' x='178' y='426' font-size='10' text-anchor='end' fill='var(--link)'>FK</text>
+<text class='mono' x='12' y='444' font-size='11' fill='var(--text)'>name</text>
+<text class='mono' x='12' y='462' font-size='11' fill='var(--text)'>city</text>
+<text class='mono' x='12' y='480' font-size='11' fill='var(--text)'>capacity</text>
+<text class='mono' x='12' y='498' font-size='11' fill='var(--text)'>is_sandbox</text>
+</g>
+<g><rect x='0' y='530' width='190' height='108' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='12' y='549' font-size='13' font-weight='600' fill='var(--text)'>venue_sections</text>
+<line x1='0' x2='190' y1='558' y2='558' stroke='var(--border-muted)'/>
+<text class='mono' x='12' y='572' font-size='11' fill='var(--text)'>id</text>
+<text class='mono' x='178' y='572' font-size='10' text-anchor='end' fill='var(--green)'>PK</text>
+<text class='mono' x='12' y='590' font-size='11' fill='var(--text)'>venue_id</text>
+<text class='mono' x='178' y='590' font-size='10' text-anchor='end' fill='var(--link)'>FK</text>
+<text class='mono' x='12' y='608' font-size='11' fill='var(--text)'>section_code</text>
+<text class='mono' x='12' y='626' font-size='11' fill='var(--text)'>layout_data</text>
+<text class='mono' x='178' y='626' font-size='10' text-anchor='end' fill='var(--muted)'>jsonb</text>
+</g>
+<g><rect x='0' y='658' width='190' height='126' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='12' y='677' font-size='13' font-weight='600' fill='var(--text)'>seats</text>
+<line x1='0' x2='190' y1='686' y2='686' stroke='var(--border-muted)'/>
+<text class='mono' x='12' y='700' font-size='11' fill='var(--text)'>id</text>
+<text class='mono' x='178' y='700' font-size='10' text-anchor='end' fill='var(--green)'>PK</text>
+<text class='mono' x='12' y='718' font-size='11' fill='var(--text)'>section_id</text>
+<text class='mono' x='178' y='718' font-size='10' text-anchor='end' fill='var(--link)'>FK</text>
+<text class='mono' x='12' y='736' font-size='11' fill='var(--text)'>row_label</text>
+<text class='mono' x='12' y='754' font-size='11' fill='var(--text)'>seat_number</text>
+<text class='mono' x='12' y='772' font-size='11' fill='var(--text)'>x/y_position</text>
+</g>
+<g><rect x='256' y='140' width='190' height='72' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='268' y='159' font-size='13' font-weight='600' fill='var(--text)'>wishlist_items</text>
+<line x1='256' x2='446' y1='168' y2='168' stroke='var(--border-muted)'/>
+<text class='mono' x='268' y='182' font-size='11' fill='var(--text)'>user_id</text>
+<text class='mono' x='434' y='182' font-size='10' text-anchor='end' fill='var(--green)'>PK → auth</text>
+<text class='mono' x='268' y='200' font-size='11' fill='var(--text)'>event_id</text>
+<text class='mono' x='434' y='200' font-size='10' text-anchor='end' fill='var(--green)'>PK FK</text>
+</g>
+<g><rect x='256' y='240' width='190' height='216' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='268' y='259' font-size='13' font-weight='600' fill='var(--text)'>events</text>
+<line x1='256' x2='446' y1='268' y2='268' stroke='var(--border-muted)'/>
+<text class='mono' x='268' y='282' font-size='11' fill='var(--text)'>id</text>
+<text class='mono' x='434' y='282' font-size='10' text-anchor='end' fill='var(--green)'>PK</text>
+<text class='mono' x='268' y='300' font-size='11' fill='var(--text)'>organizer_id</text>
+<text class='mono' x='434' y='300' font-size='10' text-anchor='end' fill='var(--link)'>FK</text>
+<text class='mono' x='268' y='318' font-size='11' fill='var(--text)'>venue_id</text>
+<text class='mono' x='434' y='318' font-size='10' text-anchor='end' fill='var(--link)'>FK</text>
+<text class='mono' x='268' y='336' font-size='11' fill='var(--text)'>title</text>
+<text class='mono' x='268' y='354' font-size='11' fill='var(--text)'>slug</text>
+<text class='mono' x='434' y='354' font-size='10' text-anchor='end' fill='var(--link)'>UQ</text>
+<text class='mono' x='268' y='372' font-size='11' fill='var(--text)'>category</text>
+<text class='mono' x='268' y='390' font-size='11' fill='var(--text)'>starts_at</text>
+<text class='mono' x='268' y='408' font-size='11' fill='var(--text)'>status</text>
+<text class='mono' x='268' y='426' font-size='11' fill='var(--text)'>waiting_room_enabled</text>
+<text class='mono' x='268' y='444' font-size='11' fill='var(--text)'>is_sandbox</text>
+</g>
+<g><rect x='256' y='476' width='190' height='126' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='268' y='495' font-size='13' font-weight='600' fill='var(--text)'>price_tiers</text>
+<line x1='256' x2='446' y1='504' y2='504' stroke='var(--border-muted)'/>
+<text class='mono' x='268' y='518' font-size='11' fill='var(--text)'>id</text>
+<text class='mono' x='434' y='518' font-size='10' text-anchor='end' fill='var(--green)'>PK</text>
+<text class='mono' x='268' y='536' font-size='11' fill='var(--text)'>event_id</text>
+<text class='mono' x='434' y='536' font-size='10' text-anchor='end' fill='var(--link)'>FK</text>
+<text class='mono' x='268' y='554' font-size='11' fill='var(--text)'>section_id</text>
+<text class='mono' x='434' y='554' font-size='10' text-anchor='end' fill='var(--link)'>FK</text>
+<text class='mono' x='268' y='572' font-size='11' fill='var(--text)'>name</text>
+<text class='mono' x='268' y='590' font-size='11' fill='var(--text)'>price_minor</text>
+<text class='mono' x='434' y='590' font-size='10' text-anchor='end' fill='var(--muted)'>bigint</text>
+</g>
+<g><rect x='256' y='622' width='190' height='144' rx='6' fill='rgba(63,185,80,0.10)' stroke='var(--green)' stroke-width='2'/>
+<text x='268' y='641' font-size='13' font-weight='600' fill='var(--text)'>event_seats</text>
+<line x1='256' x2='446' y1='650' y2='650' stroke='var(--border-muted)'/>
+<text class='mono' x='268' y='664' font-size='11' fill='var(--text)'>event_id</text>
+<text class='mono' x='434' y='664' font-size='10' text-anchor='end' fill='var(--green)'>PK FK</text>
+<text class='mono' x='268' y='682' font-size='11' fill='var(--text)'>seat_id</text>
+<text class='mono' x='434' y='682' font-size='10' text-anchor='end' fill='var(--green)'>PK FK</text>
+<text class='mono' x='268' y='700' font-size='11' fill='var(--text)'>price_tier_id</text>
+<text class='mono' x='434' y='700' font-size='10' text-anchor='end' fill='var(--link)'>FK</text>
+<text class='mono' x='268' y='718' font-size='11' fill='var(--text)'>status</text>
+<text class='mono' x='268' y='736' font-size='11' fill='var(--text)'>reservation_id</text>
+<text class='mono' x='434' y='736' font-size='10' text-anchor='end' fill='var(--link)'>FK</text>
+<text class='mono' x='268' y='754' font-size='11' fill='var(--text)'>held_until</text>
+</g>
+<g><rect x='512' y='0' width='190' height='54' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='524' y='19' font-size='13' font-weight='600' fill='var(--text)'>auth.users</text>
+<line x1='512' x2='702' y1='28' y2='28' stroke='var(--border-muted)'/>
+<text class='mono' x='524' y='42' font-size='11' fill='var(--text)'>id</text>
+<text class='mono' x='690' y='42' font-size='10' text-anchor='end' fill='var(--green)'>PK</text>
+</g>
+<g><rect x='512' y='250' width='190' height='126' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='524' y='269' font-size='13' font-weight='600' fill='var(--text)'>waiting_room_entries</text>
+<line x1='512' x2='702' y1='278' y2='278' stroke='var(--border-muted)'/>
+<text class='mono' x='524' y='292' font-size='11' fill='var(--text)'>id</text>
+<text class='mono' x='690' y='292' font-size='10' text-anchor='end' fill='var(--green)'>PK</text>
+<text class='mono' x='524' y='310' font-size='11' fill='var(--text)'>event_id</text>
+<text class='mono' x='690' y='310' font-size='10' text-anchor='end' fill='var(--link)'>FK</text>
+<text class='mono' x='524' y='328' font-size='11' fill='var(--text)'>user_id</text>
+<text class='mono' x='690' y='328' font-size='10' text-anchor='end' fill='var(--muted)'>→ auth</text>
+<text class='mono' x='524' y='346' font-size='11' fill='var(--text)'>status</text>
+<text class='mono' x='524' y='364' font-size='11' fill='var(--text)'>expires_at</text>
+</g>
+<g><rect x='512' y='430' width='190' height='126' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='524' y='449' font-size='13' font-weight='600' fill='var(--text)'>reservations</text>
+<line x1='512' x2='702' y1='458' y2='458' stroke='var(--border-muted)'/>
+<text class='mono' x='524' y='472' font-size='11' fill='var(--text)'>id</text>
+<text class='mono' x='690' y='472' font-size='10' text-anchor='end' fill='var(--green)'>PK</text>
+<text class='mono' x='524' y='490' font-size='11' fill='var(--text)'>user_id</text>
+<text class='mono' x='690' y='490' font-size='10' text-anchor='end' fill='var(--muted)'>→ auth</text>
+<text class='mono' x='524' y='508' font-size='11' fill='var(--text)'>event_id</text>
+<text class='mono' x='690' y='508' font-size='10' text-anchor='end' fill='var(--link)'>FK</text>
+<text class='mono' x='524' y='526' font-size='11' fill='var(--text)'>status</text>
+<text class='mono' x='524' y='544' font-size='11' fill='var(--text)'>expires_at</text>
+</g>
+<g><rect x='512' y='576' width='190' height='108' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='524' y='595' font-size='13' font-weight='600' fill='var(--text)'>reservation_items</text>
+<line x1='512' x2='702' y1='604' y2='604' stroke='var(--border-muted)'/>
+<text class='mono' x='524' y='618' font-size='11' fill='var(--text)'>reservation_id</text>
+<text class='mono' x='690' y='618' font-size='10' text-anchor='end' fill='var(--green)'>PK FK</text>
+<text class='mono' x='524' y='636' font-size='11' fill='var(--text)'>seat_id</text>
+<text class='mono' x='690' y='636' font-size='10' text-anchor='end' fill='var(--green)'>PK FK</text>
+<text class='mono' x='524' y='654' font-size='11' fill='var(--text)'>price_minor</text>
+<text class='mono' x='690' y='654' font-size='10' text-anchor='end' fill='var(--muted)'>bigint</text>
+<text class='mono' x='524' y='672' font-size='11' fill='var(--text)'>seat label (copied)</text>
+</g>
+<g><rect x='512' y='704' width='190' height='144' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='524' y='723' font-size='13' font-weight='600' fill='var(--text)'>payments</text>
+<line x1='512' x2='702' y1='732' y2='732' stroke='var(--border-muted)'/>
+<text class='mono' x='524' y='746' font-size='11' fill='var(--text)'>id</text>
+<text class='mono' x='690' y='746' font-size='10' text-anchor='end' fill='var(--green)'>PK</text>
+<text class='mono' x='524' y='764' font-size='11' fill='var(--text)'>reservation_id</text>
+<text class='mono' x='690' y='764' font-size='10' text-anchor='end' fill='var(--link)'>FK</text>
+<text class='mono' x='524' y='782' font-size='11' fill='var(--text)'>amount_minor</text>
+<text class='mono' x='690' y='782' font-size='10' text-anchor='end' fill='var(--muted)'>bigint</text>
+<text class='mono' x='524' y='800' font-size='11' fill='var(--text)'>status</text>
+<text class='mono' x='524' y='818' font-size='11' fill='var(--text)'>idempotency_key</text>
+<text class='mono' x='524' y='836' font-size='11' fill='var(--text)'>card_last4</text>
+</g>
+<g><rect x='768' y='0' width='190' height='108' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='780' y='19' font-size='13' font-weight='600' fill='var(--text)'>profiles</text>
+<line x1='768' x2='958' y1='28' y2='28' stroke='var(--border-muted)'/>
+<text class='mono' x='780' y='42' font-size='11' fill='var(--text)'>id</text>
+<text class='mono' x='946' y='42' font-size='10' text-anchor='end' fill='var(--green)'>PK FK</text>
+<text class='mono' x='780' y='60' font-size='11' fill='var(--text)'>name</text>
+<text class='mono' x='780' y='78' font-size='11' fill='var(--text)'>role</text>
+<text class='mono' x='780' y='96' font-size='11' fill='var(--text)'>email</text>
+</g>
+<g><rect x='768' y='470' width='190' height='126' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='780' y='489' font-size='13' font-weight='600' fill='var(--text)'>orders</text>
+<line x1='768' x2='958' y1='498' y2='498' stroke='var(--border-muted)'/>
+<text class='mono' x='780' y='512' font-size='11' fill='var(--text)'>id</text>
+<text class='mono' x='946' y='512' font-size='10' text-anchor='end' fill='var(--green)'>PK</text>
+<text class='mono' x='780' y='530' font-size='11' fill='var(--text)'>reservation_id</text>
+<text class='mono' x='946' y='530' font-size='10' text-anchor='end' fill='var(--link)'>UQ FK</text>
+<text class='mono' x='780' y='548' font-size='11' fill='var(--text)'>payment_id</text>
+<text class='mono' x='946' y='548' font-size='10' text-anchor='end' fill='var(--link)'>UQ FK</text>
+<text class='mono' x='780' y='566' font-size='11' fill='var(--text)'>event_id</text>
+<text class='mono' x='946' y='566' font-size='10' text-anchor='end' fill='var(--muted)'>→ events</text>
+<text class='mono' x='780' y='584' font-size='11' fill='var(--text)'>total_minor</text>
+<text class='mono' x='946' y='584' font-size='10' text-anchor='end' fill='var(--muted)'>bigint</text>
+</g>
+<g><rect x='768' y='616' width='190' height='144' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='780' y='635' font-size='13' font-weight='600' fill='var(--text)'>tickets</text>
+<line x1='768' x2='958' y1='644' y2='644' stroke='var(--border-muted)'/>
+<text class='mono' x='780' y='658' font-size='11' fill='var(--text)'>id</text>
+<text class='mono' x='946' y='658' font-size='10' text-anchor='end' fill='var(--green)'>PK</text>
+<text class='mono' x='780' y='676' font-size='11' fill='var(--text)'>order_id</text>
+<text class='mono' x='946' y='676' font-size='10' text-anchor='end' fill='var(--link)'>FK</text>
+<text class='mono' x='780' y='694' font-size='11' fill='var(--text)'>seat_id</text>
+<text class='mono' x='946' y='694' font-size='10' text-anchor='end' fill='var(--muted)'>→ event_seats</text>
+<text class='mono' x='780' y='712' font-size='11' fill='var(--text)'>status</text>
+<text class='mono' x='780' y='730' font-size='11' fill='var(--text)'>check_in_secret</text>
+<text class='mono' x='780' y='748' font-size='11' fill='var(--text)'>used_at</text>
+</g>
+<g><rect x='768' y='780' width='190' height='126' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='780' y='799' font-size='13' font-weight='600' fill='var(--text)'>ticket_scans</text>
+<line x1='768' x2='958' y1='808' y2='808' stroke='var(--border-muted)'/>
+<text class='mono' x='780' y='822' font-size='11' fill='var(--text)'>id</text>
+<text class='mono' x='946' y='822' font-size='10' text-anchor='end' fill='var(--green)'>PK</text>
+<text class='mono' x='780' y='840' font-size='11' fill='var(--text)'>ticket_id</text>
+<text class='mono' x='946' y='840' font-size='10' text-anchor='end' fill='var(--link)'>FK</text>
+<text class='mono' x='780' y='858' font-size='11' fill='var(--text)'>event_id</text>
+<text class='mono' x='946' y='858' font-size='10' text-anchor='end' fill='var(--muted)'>→ events</text>
+<text class='mono' x='780' y='876' font-size='11' fill='var(--text)'>gate</text>
+<text class='mono' x='780' y='894' font-size='11' fill='var(--text)'>result</text>
+</g>
+<g><rect x='0' y='976' width='190' height='126' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='12' y='995' font-size='13' font-weight='600' fill='var(--text)'>lab_runs</text>
+<line x1='0' x2='190' y1='1004' y2='1004' stroke='var(--border-muted)'/>
+<text class='mono' x='12' y='1018' font-size='11' fill='var(--text)'>id</text>
+<text class='mono' x='178' y='1018' font-size='10' text-anchor='end' fill='var(--green)'>PK</text>
+<text class='mono' x='12' y='1036' font-size='11' fill='var(--text)'>scenario</text>
+<text class='mono' x='12' y='1054' font-size='11' fill='var(--text)'>bots</text>
+<text class='mono' x='12' y='1072' font-size='11' fill='var(--text)'>passed</text>
+<text class='mono' x='12' y='1090' font-size='11' fill='var(--text)'>summary</text>
+<text class='mono' x='178' y='1090' font-size='10' text-anchor='end' fill='var(--muted)'>jsonb</text>
+</g>
+<g><rect x='256' y='976' width='190' height='144' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='268' y='995' font-size='13' font-weight='600' fill='var(--text)'>lab_state</text>
+<line x1='256' x2='446' y1='1004' y2='1004' stroke='var(--border-muted)'/>
+<text class='mono' x='268' y='1018' font-size='11' fill='var(--text)'>singleton</text>
+<text class='mono' x='434' y='1018' font-size='10' text-anchor='end' fill='var(--green)'>PK</text>
+<text class='mono' x='268' y='1036' font-size='11' fill='var(--text)'>event_id</text>
+<text class='mono' x='434' y='1036' font-size='10' text-anchor='end' fill='var(--muted)'>→ events</text>
+<text class='mono' x='268' y='1054' font-size='11' fill='var(--text)'>run_id</text>
+<text class='mono' x='434' y='1054' font-size='10' text-anchor='end' fill='var(--link)'>FK</text>
+<text class='mono' x='268' y='1072' font-size='11' fill='var(--text)'>lease_until</text>
+<text class='mono' x='268' y='1090' font-size='11' fill='var(--text)'>total_runs</text>
+<text class='mono' x='268' y='1108' font-size='11' fill='var(--text)'>total_violations</text>
+</g>
+<g><rect x='512' y='976' width='190' height='72' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='524' y='995' font-size='13' font-weight='600' fill='var(--text)'>demo_accounts</text>
+<line x1='512' x2='702' y1='1004' y2='1004' stroke='var(--border-muted)'/>
+<text class='mono' x='524' y='1018' font-size='11' fill='var(--text)'>user_id</text>
+<text class='mono' x='690' y='1018' font-size='10' text-anchor='end' fill='var(--green)'>PK → auth</text>
+<text class='mono' x='524' y='1036' font-size='11' fill='var(--text)'>display_name</text>
+</g>
+<g><rect x='768' y='976' width='190' height='90' rx='6' fill='var(--bg)' stroke='var(--border)' stroke-width='1.25'/>
+<text x='780' y='995' font-size='13' font-weight='600' fill='var(--text)'>lab_visits</text>
+<line x1='768' x2='958' y1='1004' y2='1004' stroke='var(--border-muted)'/>
+<text class='mono' x='780' y='1018' font-size='11' fill='var(--text)'>id</text>
+<text class='mono' x='946' y='1018' font-size='10' text-anchor='end' fill='var(--green)'>PK</text>
+<text class='mono' x='780' y='1036' font-size='11' fill='var(--text)'>visitor</text>
+<text class='mono' x='780' y='1054' font-size='11' fill='var(--text)'>at</text>
+</g>
+<g><rect x='0' y='0' width='190' height='108' rx='6' fill='none' stroke='var(--border-muted)' stroke-dasharray='4 4'/>
+<text x='12' y='19' font-size='13' font-weight='600' fill='var(--text)'>Legend</text>
+<text class='mono' x='12' y='42' font-size='10' fill='var(--green)'>PK</text>
+<text x='64' y='42' font-size='11' fill='var(--muted)'>primary key</text>
+<text class='mono' x='12' y='58' font-size='10' fill='var(--link)'>FK</text>
+<text x='64' y='58' font-size='11' fill='var(--muted)'>foreign key (drawn)</text>
+<text class='mono' x='12' y='74' font-size='10' fill='var(--muted)'>→ auth</text>
+<text x='64' y='74' font-size='11' fill='var(--muted)'>points to auth.users</text>
+<text class='mono' x='12' y='90' font-size='10' fill='var(--muted)'>→ tbl</text>
+<text x='64' y='90' font-size='11' fill='var(--muted)'>FK not drawn</text>
+</g>
+<text x='512' y='74' font-size='11' fill='var(--muted)'>referenced by 11 tables</text>
+</svg>
+      </div>
+        <button class="erd-more" type="button" aria-expanded="false">Show the full diagram</button>
+      </div>
+    </section>
+
+    <section class="tk-sec how">
+      <p class="kicker">Under the hood</p>
+      <h2>How it works</h2>
+      <p class="sec-lead">For the curious. Open any section.</p>
+      <details class="fold">
+        <summary><span><b>How a seat is sold exactly once</b><small>Postgres functions, locks and constraints</small></span></summary>
+        <div class="fold-body">
+      <p class="lead">Every multi-row operation is one Postgres function, so it either fully happens or not at all. The second fan never waits; they get <code>SEAT_UNAVAILABLE</code> the moment the first one commits.</p>
+      <ol class="steps">
+        <li>
+          <h3>Hold</h3>
+          <p><code>reserve_seats</code> locks seat rows in a fixed order, so overlapping requests can't deadlock, then claims only free ones with one conditional <code>UPDATE</code>. Fewer rows than asked for rolls everything back.</p>
+        </li>
+        <li>
+          <h3>Pay</h3>
+          <p><code>start_payment</code> records a pending payment for the held amount. No lock is held while the fan pays, and an idempotency key makes retries return the same payment.</p>
+        </li>
+        <li>
+          <h3>Confirm</h3>
+          <p><code>complete_payment</code> runs server-side: seats go held to sold, an order and one ticket per seat are created. A replayed webhook returns the same order.</p>
+        </li>
+      </ol>
+      <ul>
+        <li><strong>Constraints as the last line of defence.</strong> One ticket per seat per event and one order per reservation are unique constraints; a <code>CHECK</code> makes impossible seat states unrepresentable.</li>
+        <li><strong>No ghost seats.</strong> An expired hold reads as available everywhere at once, even before the pg_cron cleanup runs. A payment that lands after its hold lapsed is refunded and sells nothing.</li>
+        <li><strong>Door check-in</strong> is a single <code>UPDATE ... WHERE status = 'VALID'</code>: two gates scan one pass at once, one admits, the other is refused.</li>
+        <li><strong>Deliberately single-region.</strong> A second writer region would let both sides of a network partition sell the same seat, so inventory keeps one writer per event.</li>
+      </ul>
+        </div>
+      </details>
+      <details class="fold">
+        <summary><span><b>The Concurrency Lab</b><small>The four races and how the lab stays safe</small></span></summary>
+        <div class="fold-body">
+      <p class="lead">Instead of asking a recruiter to trust the claim, the site lets them run it. Each bot is its own HTTP request and its own transaction through the production functions.</p>
+      <table class="data">
+        <thead><tr><th>Race</th><th>What happens</th><th>Result (local run)</th></tr></thead>
+        <tbody>
+          <tr><td>One seat, one crowd</td><td>100 bots try to hold the same seat at once</td><td class="ok">1 held, 99 refused</td></tr>
+          <tr><td>Overlapping groups</td><td>Bots each grab 3 side-by-side seats, colliding everywhere</td><td class="ok">5 holds, no seat in two holds</td></tr>
+          <tr><td>Duplicate webhooks</td><td>One payment's webhook delivered 20 times at once</td><td class="ok">1 order</td></tr>
+          <tr><td>Door race</td><td>20 scanners at two gates scan one ticket</td><td class="ok">1 admitted, 19 refused</td></tr>
+        </tbody>
+      </table>
+      <ul>
+        <li><strong>A read-only Postgres terminal</strong> shows each request's backend process id, transaction id and the database's own clock: 100 requests served by about 10 pooled connections as 100 separate transactions. Nothing in it is typed or simulated by the page.</li>
+        <li><strong>The database audits itself.</strong> After every run it checks for seats in two holds, partial holds, extra orders, duplicate tickets and double admissions, and the result goes on a public scoreboard.</li>
+        <li><strong>Safe on a free tier.</strong> Runs are budgeted in the database (3 per visitor every 10 minutes, 60 per hour site-wide), visitors are an HMAC of their IP address, and bots can only act on a hidden sandbox event.</li>
+      </ul>
+        </div>
+      </details>
+      <details class="fold">
+        <summary><span><b>Features</b><small>Everything fans and organizers can do</small></span></summary>
+        <div class="fold-body">
+      <div class="cols">
+        <div>
+          <h3>For fans</h3>
+          <ul>
+            <li><strong>Live seat map.</strong> Seats turn held or sold the moment someone else takes them, and the map resyncs after every reconnect.</li>
+            <li><strong>See the crowd.</strong> Anonymous presence shows how many fans are on the map and which seats others are eyeing.</li>
+            <li><strong>Holds, not carts.</strong> Up to 8 seats for 10 minutes, all or nothing; the countdown survives refreshes.</li>
+            <li><strong>Simulated checkout.</strong> Test cards cover approve, decline, a lost gateway reply and a duplicate webhook. Retrying is always safe.</li>
+            <li><strong>QR door passes</strong> with a 128-bit secret only the owner can fetch, plus order history and a wishlist.</li>
+            <li><strong>Waiting room</strong> that lets fans into hot events a few at a time, first come first served.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>For organizers</h3>
+          <ul>
+            <li><strong>Venues and seating.</strong> Sections, rows and seats with a layout preview.</li>
+            <li><strong>Events and pricing.</strong> Per-section price tiers and per-seat inventory. Published events are frozen by database triggers, so nothing changes under a fan mid-checkout.</li>
+            <li><strong>Door check-in.</strong> Paste or camera-scan a pass; the first scan admits and later scans say where and when it was used.</li>
+            <li><strong>Analytics.</strong> Sales and reservation statistics aggregated in the database.</li>
+          </ul>
+        </div>
+      </div>
+        </div>
+      </details>
+      <details class="fold">
+        <summary><span><b>Architecture</b><small>Browser, server and database layers</small></span></summary>
+        <div class="fold-body">
+      <p class="lead">Components import only from one services facade, so the backend behind it can change without touching the UI.</p>
+      <div class="arch">
+        <div class="layer">
+          <h3>Browser &middot; React 19</h3>
+          <div class="chips">
+            <span class="chip">Components + hooks<small>TanStack Query owns server data</small></span>
+            <span class="chip">Zustand<small>UI filters and seat selection only</small></span>
+            <span class="chip">@/services facade<small>one contract, two backends</small></span>
+            <span class="chip">Mock adapters<small>localStorage, previews and CI</small></span>
+          </div>
+        </div>
+        <div class="flow">&darr; Supabase adapters &middot; RPC calls under row-level security</div>
+        <div class="layer">
+          <h3>Next.js server &middot; holds the secret key</h3>
+          <div class="chips">
+            <span class="chip">proxy.ts<small>refreshes the session</small></span>
+            <span class="chip">payments/charge<small>simulated gateway</small></span>
+            <span class="chip">lab routes<small>run and group races</small></span>
+          </div>
+        </div>
+        <div class="flow">&darr; secret-key RPC calls</div>
+        <div class="layer">
+          <h3>Supabase Postgres</h3>
+          <div class="chips">
+            <span class="chip key">Booking functions<small>reserve, pay, check in</small></span>
+            <span class="chip">Row-level security<small>on every table</small></span>
+            <span class="chip">pg_cron<small>expires holds every minute</small></span>
+            <span class="chip">Realtime<small>seat status pushed to browsers</small></span>
+          </div>
+        </div>
+      </div>
+      <ul>
+        <li><strong>Database rows never reach React.</strong> Mappers convert UUIDs, price tiers and flexible seat labels into domain types.</li>
+        <li><strong>Money is integer PHP centavos</strong> end to end, from the database <code>BIGINT</code> to the forms.</li>
+        <li><strong>Double-submit guard.</strong> A synchronous hook blocks repeated reserve and confirm clicks before a request leaves the browser; the database remains the real guarantee.</li>
+      </ul>
+        </div>
+      </details>
+      <details class="fold">
+        <summary><span><b>What the database enforces</b><small>Keys, constraints and row-level security</small></span></summary>
+        <div class="fold-body">      <ul>
+        <li><strong>One row per seat per event.</strong> <code>event_seats</code> has the composite key <code>(event_id, seat_id)</code> and a <code>status</code> of <code>AVAILABLE</code>, <code>HELD</code> or <code>SOLD</code>, with <code>held_until</code> and <code>reservation_id</code> recording who holds it and until when. This is the table the booking functions lock.</li>
+        <li><strong>One order per reservation and per payment.</strong> <code>orders.reservation_id</code> and <code>orders.payment_id</code> are both unique, so a replayed webhook cannot create a second order.</li>
+        <li><strong>Venues can't be mixed up.</strong> Composite foreign keys carry <code>venue_id</code> through seats, price tiers, events and event seats, so a seat from one venue can't be sold for another venue's event.</li>
+        <li><strong>Money is integer minor units.</strong> <code>price_minor</code>, <code>amount_minor</code> and <code>total_minor</code> are <code>bigint</code> and capped at 2<sup>53</sup>&minus;1, the largest integer JavaScript can hold exactly.</li>
+        <li><strong>History survives edits.</strong> Reservation items and tickets store their own copy of the section, row, seat and price.</li>
+        <li><strong>Every door scan is logged.</strong> <code>ticket_scans</code> records the gate and a result of <code>ADMITTED</code>, <code>ALREADY_USED</code>, <code>INVALID</code>, <code>WRONG_EVENT</code> or <code>CANCELLED</code>. A ticket's <code>check_in_secret</code> defaults to a random value.</li>
+        <li><strong>Roles are constrained.</strong> <code>profiles.role</code> is <code>CUSTOMER</code>, <code>ORGANIZER</code> or <code>ADMIN</code>, and organizer membership is <code>OWNER</code>, <code>EDITOR</code> or <code>VIEWER</code>.</li>
+        <li><strong>Sandbox rows are flagged.</strong> <code>is_sandbox</code> on venues and events keeps the Concurrency Lab's data out of the public catalogue.</li>
+        <li><strong>Row-level security on all 17 public tables.</strong> The 4 private tables hold lab runs, the lab lease, the demo account and run-budget visits. The <code>anon</code> and <code>authenticated</code> roles have no privileges on them, so only server-side code reaches them.</li>
+        <li><strong>Logic lives next to the data.</strong> 63 functions across the two schemas (29 public, all <code>SECURITY DEFINER</code>; 34 private), 20 triggers, and 2 pg_cron jobs: held seats are released every minute and the demo account is reset daily.</li>
+      </ul>
+        </div>
+      </details>
+      <details class="fold">
+        <summary><span><b>Security</b><small>Row-level security, secrets and passes</small></span></summary>
+        <div class="fold-body">
+      <ul>
+        <li><strong>Row-level security on every table.</strong> Client writes go through <code>SECURITY DEFINER</code> functions in a private schema that check who is calling.</li>
+        <li><strong>Roles can't be self-assigned.</strong> Sign-up always creates a Customer; organizers are promoted in trusted SQL.</li>
+        <li><strong>Secret keys stay on the server</strong>, and the build is checked to confirm they never reach the browser bundle.</li>
+        <li><strong>Door passes can't be forged.</strong> The pass secret is never a readable column, and a wrong secret and an unknown ticket give the same answer.</li>
+        <li><strong>Realtime leaks nothing.</strong> Seat broadcasts carry only a seat id and a status.</li>
+        <li><strong>Payments are always simulated.</strong> No card number is stored, only the last four digits.</li>
+      </ul>
+        </div>
+      </details>
+      <details class="fold">
+        <summary><span><b>Testing and CI</b><small>pgTAP, HTTP races, Vitest, Playwright</small></span></summary>
+        <div class="fold-body">
+      <table class="data">
+        <thead><tr><th>Layer</th><th>What it covers</th></tr></thead>
+        <tbody>
+          <tr><td>pgTAP</td><td>Permissions per role, all-or-nothing holds, hold expiry, idempotent payments and webhooks, refunds after expiry, one ticket per seat, waiting-room enforcement, check-in, and the lab's lease, audit and run budgets</td></tr>
+          <tr><td>HTTP races</td><td>Real concurrent requests: 200 fans on one seat, overlapping groups, simultaneous webhooks, scanners at two gates</td></tr>
+          <tr><td>Vitest</td><td>Auth flows, row mappers, error mapping, checkout retry, the group-seating planner, presence, the QR pass and scanner</td></tr>
+          <tr><td>Playwright</td><td>Sign-in and booking journeys, and two fans racing for overlapping seats in two browser tabs</td></tr>
+        </tbody>
+      </table>
+      <p>GitHub Actions runs on every push: format check, type check, unit tests and a production build, then a disposable Supabase stack for the database lint, every pgTAP suite and the 200-fan race.</p>
+        </div>
+      </details>
+      <details class="fold">
+        <summary><span><b>What I learned</b><small>Lessons from building it</small></span></summary>
+        <div class="fold-body">
+      <ul>
+        <li><strong>Test through the real API, not only in SQL.</strong> The first lab run failed with <code>UPDATE requires a WHERE clause</code>: Supabase's API connections load <code>pg_safeupdate</code>, which my pgTAP suite (running as <code>postgres</code>) doesn't. Exercising the route against the real stack caught it.</li>
+        <li><strong>Make deadlocks impossible rather than rare.</strong> Locking seats in a fixed order means overlapping group requests can't wait on each other.</li>
+        <li><strong>Know what you're not building.</strong> Multi-region writes were out of scope on purpose; I documented the split-brain tradeoff instead of faking it.</li>
+        <li><strong>A public demo needs guardrails.</strong> Run budgets, hashed visitor ids and a sandbox event keep a free-tier database safe from the very visitors it invites.</li>
+      </ul>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <dialog class="lightbox" aria-label="Enlarged preview">
+    <button class="lb-close" type="button" aria-label="Close">&times;</button>
+    <img alt="">
+  </dialog>
+  <script>
+    // Click a GIF to see it full size; without JavaScript the link just opens the GIF.
+    const lb = document.querySelector('.lightbox'), lbImg = lb.querySelector('img');
+    document.querySelectorAll('a.zoom').forEach(a => a.addEventListener('click', e => {
+      if (!lb.showModal) return;
+      e.preventDefault();
+      lbImg.src = a.getAttribute('href');
+      lbImg.alt = a.querySelector('img').alt;
+      lb.showModal();
+    }));
+    lb.addEventListener('click', () => lb.close());
+    lb.addEventListener('close', () => lbImg.removeAttribute('src'));
+    // The diagram starts folded to save scrolling.
+    const box = document.querySelector('.erd-box'), more = box.querySelector('.erd-more');
+    more.addEventListener('click', () => {
+      const open = box.classList.toggle('open');
+      more.setAttribute('aria-expanded', open);
+      more.textContent = open ? 'Show less' : 'Show the full diagram';
+      if (!open) box.scrollIntoView({ block: 'start' });
+    });
+  </script>
+  <script src="sky.js?v=10"></script>
+</body>
+</html>
